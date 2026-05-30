@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(npx next *)",
+      "Bash(node_modules/.bin/next build *)",
+      "Bash(node_modules/.bin/next dev *)",
+      "Bash(mkdir -p \"C:\\\\Users\\\\surface\\\\Desktop\\\\Photographic Website\\\\.claude\")",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(netstat -ano)",
+      "Bash(taskkill /PID 2084 /F)",
+      "PowerShell(Stop-Process -Id 2084 -Force)",
+      "Read(//c/Users/surface/Desktop/**)",
+      "Read(//c/Users/surface/Desktop//**)",
+      "Bash(node scripts/compress-photos.mjs)",
+      "Bash(git init *)",
+      "Bash(git add *)"
+    ]
+  }
+}
