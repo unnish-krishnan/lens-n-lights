@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import Image from 'next/image'
 import { ChevronDown } from 'lucide-react'
 
 const fadeUp = (delay: number) => ({
@@ -13,10 +14,35 @@ export default function Hero() {
   return (
     <section
       id="home"
-      className="hero-gradient relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-16"
+      className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-16 overflow-hidden"
     >
-      {/* Content */}
-      <div className="max-w-3xl mx-auto flex flex-col items-center gap-6">
+      {/* Background photo — lone boat on turquoise lagoon */}
+      <div className="absolute inset-0 z-0">
+        <Image
+          src="/images/landscapes/lone-boat-lagoon.jpg"
+          alt="Lone boat on a turquoise lagoon"
+          fill
+          className="object-cover object-center scale-105"
+          priority
+          quality={90}
+        />
+        {/* White fade overlay — keeps text crisp, tones the photo to editorial */}
+        <div className="absolute inset-0 bg-white/50" />
+        {/* Subtle green-tinted gradient mesh on top */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: `
+              radial-gradient(ellipse 70% 60% at 15% 25%, rgba(82,183,136,0.10) 0%, transparent 60%),
+              radial-gradient(ellipse 60% 70% at 85% 75%, rgba(45,106,79,0.07) 0%, transparent 55%),
+              radial-gradient(ellipse 80% 40% at 50% 0%,  rgba(248,246,241,0.50) 0%, transparent 50%)
+            `,
+          }}
+        />
+      </div>
+
+      {/* Foreground content */}
+      <div className="relative z-10 max-w-3xl mx-auto flex flex-col items-center gap-6">
         <motion.span
           {...fadeUp(0)}
           className="inline-block font-body text-xs font-medium tracking-[0.25em] uppercase text-accent-green bg-light-green px-4 py-1.5 rounded-full"
@@ -55,7 +81,7 @@ export default function Hero() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1, duration: 0.6 }}
-        className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce-slow"
+        className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce-slow z-10"
       >
         <a href="#gallery" aria-label="Scroll down">
           <ChevronDown size={28} className="text-muted-gray" />
