@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import Hero from '@/components/Hero'
 import CategoryTabs from '@/components/CategoryTabs'
 import PhotoGrid from '@/components/PhotoGrid'
@@ -10,17 +10,30 @@ import UploadFAB from '@/components/UploadFAB'
 import ToastNotification from '@/components/ToastNotification'
 import { SAMPLE_PHOTOS, type PhotoItem } from '@/lib/photos'
 
+// ─── Secret admin unlock ─────────────────────────────────────────────────────
+// Press Shift+U three times within 2 seconds to reveal the upload button.
+// Stored in sessionStorage — resets automatically when the tab is closed.
+const ADMIN_KEY = 'U'
+const ADMIN_PRESSES_NEEDED = 3
+const ADMIN_WINDOW_MS = 2000
+// ─────────────────────────────────────────────────────────────────────────────
+
 export default function HomePage() {
   const [activeCategory, setActiveCategory] = useState('All')
   const [photos, setPhotos] = useState<PhotoItem[]>(SAMPLE_PHOTOS)
   const [lightboxId, setLightboxId] = useState<string | null>(null)
   const [showUploadModal, setShowUploadModal] = useState(false)
   const [showToast, setShowToast] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
 
-  // Load uploaded photos from localStorage on mount
+  const pressTimestamps = useRef<number[]>([])
+
+  // Load uploaded photos from localStorage on mount + restore admin session
   useEffect(() => {
     try {
-      const stored = JSON.parse(localStorage.getItem('portfolioPhotos') ?? '[]') as PhotoItem[]
+      const stored = JSON.parse(
+        localStorage.getItem('portfolioPhotos') ?? '[]'
+      ) as PhotoItem[]
       if (stored.length > 0) {
         setPhotos((prev) => {
           const existingIds = new Set(prev.map((p) => p.id))
@@ -31,13 +44,18 @@ export default function HomePage() {
     } catch {
       // localStorage unavailable
     }
+
+    // Restore admin state for the current tab session (survives refresh, not tab close)
+    if (sessionStorage.getItem('lnl_admin') === '1') setIsAdmin(true)
   }, [])
 
   // Sync across tabs
   useEffect(() => {
     const handler = () => {
       try {
-        const stored = JSON.parse(localStorage.getItem('portfolioPhotos') ?? '[]') as PhotoItem[]
+        const stored = JSON.parse(
+          localStorage.getItem('portfolioPhotos') ?? '[]'
+        ) as PhotoItem[]
         setPhotos(() => {
           const uploadedIds = new Set(stored.map((p) => p.id))
           const base = SAMPLE_PHOTOS.filter((p) => !uploadedIds.has(p.id))
@@ -47,6 +65,27 @@ export default function HomePage() {
     }
     window.addEventListener('storage', handler)
     return () => window.removeEventListener('storage', handler)
+  }, [])
+
+  // Secret keypress listener — Shift+U × 3 within 2 seconds unlocks the FAB
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.shiftKey && e.key.toUpperCase() === ADMIN_KEY) {
+        const now = Date.now()
+        pressTimestamps.current.push(now)
+        // Discard presses older than the time window
+        pressTimestamps.current = pressTimestamps.current.filter(
+          (t) => now - t < ADMIN_WINDOW_MS
+        )
+        if (pressTimestamps.current.length >= ADMIN_PRESSES_NEEDED) {
+          pressTimestamps.current = []
+          setIsAdmin(true)
+          sessionStorage.setItem('lnl_admin', '1')
+        }
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
   }, [])
 
   const filteredPhotos = useMemo(
@@ -99,9 +138,9 @@ export default function HomePage() {
             light that makes the ordinary luminous.
           </p>
           <p className="font-body text-base text-muted-gray leading-relaxed">
-            This portfolio is a living archive of those encounters. Browse
-            by category, or upload your own images to curate a personal
-            collection alongside mine.
+            This portfolio is a living archive of those encounters. Each image
+            is a conversation between light, time, and place — captured as
+            faithfully as the moment allowed.
           </p>
         </div>
       </section>
@@ -113,7 +152,8 @@ export default function HomePage() {
         onNavigate={(id) => setLightboxId(id)}
       />
 
-      <UploadFAB onClick={() => setShowUploadModal(true)} />
+      {/* Upload FAB — hidden from public. Unlock: Shift+U × 3 within 2 seconds */}
+      {isAdmin && <UploadFAB onClick={() => setShowUploadModal(true)} />}
 
       <UploadModal
         open={showUploadModal}
